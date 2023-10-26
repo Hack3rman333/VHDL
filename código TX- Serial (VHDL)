@@ -1,0 +1,66 @@
+--
+-- protocolo de transmissao de dados por uma serial
+--
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity transmissor is
+    port ( clock,reset,send: in std_logic;
+           palavra: in std_logic_vector(7 downto 0);
+           busy, linha: out std_logic
+         );
+end transmissor;
+
+architecture a1 of transmissor is
+    type STATES is (swait, sstart, s7, s6, s5, s4, s3, s2, s1, s0, sstop);
+    signal EA, PE : STATES;     
+begin
+--  <<<<  FAZER AQUI A CODIFICAÇÃO DA MÁQUINA DE ESTADOS >>>
+
+    process(reset,clock)
+begin
+        if reset= '1' then
+        EA <= swait;
+        elsif rising_edge(clock) then
+        EA <= PE;
+end if;
+end process;
+
+    process(clock, reset, EA, send )
+            begin  
+                case EA is 
+                    when swait =>
+                        if reset = '1' or send = '0' then
+                                  PE <= swait;
+                            else  PE <= sstart;
+                
+                        end if;
+                    when sstart => PE <= s7;
+                    when s7 => PE <= s6;
+                    when s6 => PE <= s5;
+                    when s5 => PE <= s4;
+                    when s4 => PE <= s3;
+                    when s3 => PE <= s2;
+                    when s2 => PE <= s1;
+                    when s1 => PE <= s0;
+                    when s0 => PE <= sstop;
+                    when sstop => PE <= swait;
+                end case;
+            end process;
+
+           busy <= '0' when EA = swait else '1';
+
+           
+                            linha <= palavra(7) when EA = s7 else
+                            palavra(6) when EA = s6 else
+                            palavra(5) when EA = s5 else
+                            palavra(4) when EA = s4 else
+                            palavra(3) when EA = s3 else
+                            palavra(2) when EA = s2 else
+                            palavra(1) when EA = s1 else
+                            palavra(0) when EA = s0 else
+                            '0' when EA = sstop or EA = sstart else '1';
+  
+end a1;
+
+
